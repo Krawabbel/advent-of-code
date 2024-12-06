@@ -19,14 +19,14 @@ func main() {
 	part2(input)
 }
 
-func part2(input string) {
+func part1(input string) {
 
 	sol := 0
 
 	fmt.Println("SOLUTION TO PART 1:", sol)
 }
 
-func part1(input string) {
+func part2(input string) {
 
 	sol := 0
 
