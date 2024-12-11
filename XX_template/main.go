@@ -2,14 +2,19 @@ package main
 
 import (
 	"aoc2024/internal/util"
+	"bytes"
 	"fmt"
 	"os"
-	"strconv"
-	"strings"
 )
 
-type line struct {
-	fields []int
+type Input struct {
+	grid [][]byte
+}
+
+func preprocess(data []byte) Input {
+	grid := bytes.Split(data, []byte{'\n'})
+
+	return Input{grid: grid}
 }
 
 func main() {
@@ -18,41 +23,19 @@ func main() {
 	blob, err := os.ReadFile(path)
 	util.Must(err)
 
-	input := string(blob)
+	input := preprocess(blob)
 
-	strLines := strings.Split(input, "\n")
+	part1(input)
 
-	lines := make([]line, len(strLines))
-	for i, l := range strLines {
-		strFields := strings.Split(l, " ")
-
-		fields := make([]int, len(strFields))
-		for j, f := range strFields {
-			field, err := strconv.Atoi(f)
-			util.Must(err)
-			fields[j] = field
-		}
-		lines[i] = line{fields: fields}
-	}
-
-	part1(lines)
-
-	part2(lines)
+	part2(input)
 }
 
-func part1(lines []line) {
-
+func part1(input Input) {
 	sol := 0
-
-	for i, l := range lines {
-		fmt.Println(i, l)
-	}
-
 	fmt.Println("SOLUTION TO PART 1:", sol)
 }
 
-func part2(eqs []line) {
+func part2(input Input) {
 	sol := 0
-
 	fmt.Println("SOLUTION TO PART 2:", sol)
 }
