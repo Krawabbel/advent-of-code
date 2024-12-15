@@ -1,7 +1,7 @@
 package main
 
 import (
-	"aoc2024/internal/util"
+	"aoc2024/internal/lib"
 	"fmt"
 	"os"
 	"strconv"
@@ -12,7 +12,7 @@ func main() {
 	path := os.Args[1]
 
 	blob, err := os.ReadFile(path)
-	util.Must(err)
+	lib.Must(err)
 
 	input := string(blob)
 
@@ -25,9 +25,9 @@ func main() {
 
 			pair := strings.Split(l, "|")
 			left, err := strconv.Atoi(pair[0])
-			util.Must(err)
+			lib.Must(err)
 			right, err := strconv.Atoi(pair[1])
-			util.Must(err)
+			lib.Must(err)
 			order = append(order, []int{left, right})
 
 		} else if len(l) > 0 {
@@ -36,7 +36,7 @@ func main() {
 			page := make([]int, len(numbers))
 			for i, n := range numbers {
 				page[i], err = strconv.Atoi(n)
-				util.Must(err)
+				lib.Must(err)
 			}
 			pages = append(pages, page)
 

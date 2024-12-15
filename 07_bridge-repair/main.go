@@ -1,7 +1,7 @@
 package main
 
 import (
-	"aoc2024/internal/util"
+	"aoc2024/internal/lib"
 	"fmt"
 	"os"
 	"strconv"
@@ -17,7 +17,7 @@ func main() {
 	path := os.Args[1]
 
 	blob, err := os.ReadFile(path)
-	util.Must(err)
+	lib.Must(err)
 
 	input := string(blob)
 
@@ -27,12 +27,12 @@ func main() {
 	for i, l := range lines {
 		parts := strings.Split(l, ": ")
 		result, err := strconv.Atoi(parts[0])
-		util.Must(err)
+		lib.Must(err)
 		strArgs := strings.Split(parts[1], " ")
 		args := make([]int, len(strArgs))
 		for j, a := range strArgs {
 			arg, err := strconv.Atoi(a)
-			util.Must(err)
+			lib.Must(err)
 			args[j] = arg
 		}
 		eqs[i] = equation{result: result, args: args}
@@ -82,7 +82,7 @@ func solvePart2(res, tmp int, args []int) bool {
 	}
 
 	val, err := strconv.Atoi(fmt.Sprintf("%d%d", tmp, args[0]))
-	util.Must(err)
+	lib.Must(err)
 	return solvePart2(res, val, args[1:])
 }
 

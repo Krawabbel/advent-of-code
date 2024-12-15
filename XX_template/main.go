@@ -1,7 +1,7 @@
 package main
 
 import (
-	"aoc2024/internal/util"
+	"aoc2024/internal/lib"
 	"bytes"
 	"fmt"
 	"os"
@@ -21,7 +21,7 @@ func main() {
 	path := os.Args[1]
 
 	blob, err := os.ReadFile(path)
-	util.Must(err)
+	lib.Must(err)
 
 	input := preprocess(blob)
 

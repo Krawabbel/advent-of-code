@@ -1,7 +1,7 @@
 package main
 
 import (
-	"aoc2024/internal/util"
+	"aoc2024/internal/lib"
 	"fmt"
 	"os"
 	"strconv"
@@ -17,7 +17,7 @@ func preprocess(data []byte) Input {
 	stones := make([]int, len(strs))
 	for i, s := range strs {
 		stone, err := strconv.Atoi(s)
-		util.Must(err)
+		lib.Must(err)
 		stones[i] = stone
 	}
 	return Input{stones: stones}
@@ -27,7 +27,7 @@ func main() {
 	path := os.Args[1]
 
 	blob, err := os.ReadFile(path)
-	util.Must(err)
+	lib.Must(err)
 
 	input := preprocess(blob)
 
@@ -49,9 +49,9 @@ func blink1(orig []int, n int) int {
 				next = append(next, 1)
 			case len(s)%2 == 0:
 				left, err := strconv.Atoi(s[:len(s)/2])
-				util.Must(err)
+				lib.Must(err)
 				right, err := strconv.Atoi(s[len(s)/2:])
-				util.Must(err)
+				lib.Must(err)
 				next = append(next, left, right)
 			default:
 				next = append(next, stone*2024)
@@ -79,9 +79,9 @@ func blink2(orig []int, n int) int {
 
 			case len(s)%2 == 0:
 				left, err := strconv.Atoi(s[:len(s)/2])
-				util.Must(err)
+				lib.Must(err)
 				right, err := strconv.Atoi(s[len(s)/2:])
-				util.Must(err)
+				lib.Must(err)
 				next[left] += count
 				next[right] += count
 			default:

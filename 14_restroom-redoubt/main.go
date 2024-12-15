@@ -1,7 +1,7 @@
 package main
 
 import (
-	"aoc2024/internal/util"
+	"aoc2024/internal/lib"
 	"bufio"
 	"fmt"
 	"os"
@@ -91,10 +91,10 @@ func preprocess(data []byte, width, height int) Input {
 	for i, l := range lines {
 		// fmt.Println(l)
 		m := reRobot.FindStringSubmatch(l)
-		vs := util.MustToInts(m[1:])
+		vs := lib.MustToInts(m[1:])
 		r := Robot{px: vs[0], py: vs[1], vx: vs[2], vy: vs[3]}
 		l2 := fmt.Sprintf("p=%d,%d v=%d,%d", r.px, r.py, r.vx, r.vy)
-		util.MustBeTrue(l2 == l)
+		lib.MustBeTrue(l2 == l)
 		robots[i] = r
 	}
 
@@ -109,10 +109,10 @@ func main() {
 	path := os.Args[1]
 
 	blob, err := os.ReadFile(path)
-	util.Must(err)
+	lib.Must(err)
 
-	width := util.MustToInt(os.Args[2])
-	height := util.MustToInt(os.Args[3])
+	width := lib.MustToInt(os.Args[2])
+	height := lib.MustToInt(os.Args[3])
 
 	input := preprocess(blob, width, height)
 
@@ -182,7 +182,7 @@ func part2(input Input) {
 
 			fmt.Println("Press 'Enter' to continue...")
 			_, err := bufio.NewReader(os.Stdin).ReadBytes('\n')
-			util.Must(err)
+			lib.Must(err)
 		}
 	}
 

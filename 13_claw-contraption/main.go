@@ -1,7 +1,7 @@
 package main
 
 import (
-	"aoc2024/internal/util"
+	"aoc2024/internal/lib"
 	"bufio"
 	"bytes"
 	"fmt"
@@ -30,10 +30,10 @@ func processLine(s *bufio.Scanner, re *regexp.Regexp) (int, int) {
 	matches := re.FindStringSubmatch(line)
 
 	x, err := strconv.Atoi(matches[1])
-	util.Must(err)
+	lib.Must(err)
 
 	y, err := strconv.Atoi(matches[2])
-	util.Must(err)
+	lib.Must(err)
 
 	return x, y
 }
@@ -69,7 +69,7 @@ func preprocess(data []byte) Input {
 		}
 	}
 
-	util.Must(scan.Err())
+	lib.Must(scan.Err())
 
 	return Input{games: games}
 }
@@ -78,7 +78,7 @@ func main() {
 	path := os.Args[1]
 
 	blob, err := os.ReadFile(path)
-	util.Must(err)
+	lib.Must(err)
 
 	input := preprocess(blob)
 

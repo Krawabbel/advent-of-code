@@ -1,7 +1,7 @@
 package main
 
 import (
-	"aoc2024/internal/util"
+	"aoc2024/internal/lib"
 	"fmt"
 	"os"
 	"regexp"
@@ -20,7 +20,7 @@ func main() {
 	path := os.Args[1]
 
 	blob, err := os.ReadFile(path)
-	util.Must(err)
+	lib.Must(err)
 
 	input := string(blob)
 
@@ -36,10 +36,10 @@ func part1(input string) {
 	sum := 0
 	for _, m := range matches {
 		a, err := strconv.Atoi(m[1])
-		util.Must(err)
+		lib.Must(err)
 
 		b, err := strconv.Atoi(m[2])
-		util.Must(err)
+		lib.Must(err)
 
 		sum += a * b
 	}
@@ -59,10 +59,10 @@ func part2(input string) {
 			if do {
 
 				a, err := strconv.Atoi(m[2])
-				util.Must(err)
+				lib.Must(err)
 
 				b, err := strconv.Atoi(m[3])
-				util.Must(err)
+				lib.Must(err)
 
 				sum += a * b
 			}
