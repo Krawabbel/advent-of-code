@@ -24,7 +24,7 @@ func VecMultElementwise(u Vector, v Vector) Vector {
 }
 
 type Input struct {
-	walls, boxes  map[Vector]lib.Element
+	walls, boxes  map[Vector]struct{}
 	robot         Vector
 	moves         []byte
 	width, height int
@@ -33,8 +33,8 @@ type Input struct {
 func preprocess(data []byte) Input {
 	parts := bytes.Split(data, []byte{'\n', '\n'})
 
-	walls := make(map[Vector]lib.Element)
-	boxes := make(map[Vector]lib.Element)
+	walls := make(map[Vector]struct{})
+	boxes := make(map[Vector]struct{})
 	var robot Vector
 
 	grid := bytes.Split(parts[0], []byte{'\n'})
@@ -43,9 +43,9 @@ func preprocess(data []byte) Input {
 			p := Vector{i: i, j: j}
 			switch val {
 			case '#':
-				walls[p] = lib.MakeElement()
+				walls[p] = struct{}{}
 			case 'O':
-				boxes[p] = lib.MakeElement()
+				boxes[p] = struct{}{}
 			case '@':
 				robot = p
 			case '.':
@@ -80,7 +80,7 @@ func main() {
 	part2(input)
 }
 
-func disp1(walls, boxes map[Vector]lib.Element, robot Vector, width, height int) {
+func disp1(walls, boxes map[Vector]struct{}, robot Vector, width, height int) {
 	grid := make([][]byte, height)
 	for i := range grid {
 		grid[i] = bytes.Repeat([]byte{'.'}, width)
@@ -104,7 +104,7 @@ func disp1(walls, boxes map[Vector]lib.Element, robot Vector, width, height int)
 	}
 }
 
-func disp2(walls, boxes map[Vector]lib.Element, robot Vector, width, height int) {
+func disp2(walls, boxes map[Vector]struct{}, robot Vector, width, height int) {
 	grid := make([][]byte, height)
 	for i := range grid {
 		grid[i] = bytes.Repeat([]byte{'.'}, width)
@@ -147,7 +147,7 @@ func direction(b byte) Vector {
 	return Vec(0, 0)
 }
 
-func tryPush(p, dir Vector, walls, boxes map[Vector]lib.Element) bool {
+func tryPush(p, dir Vector, walls, boxes map[Vector]struct{}) bool {
 	next := VecAdd(p, dir)
 	if _, isWall := walls[next]; isWall {
 		return false
@@ -158,7 +158,7 @@ func tryPush(p, dir Vector, walls, boxes map[Vector]lib.Element) bool {
 			return false
 		}
 		delete(boxes, next)
-		boxes[VecAdd(next, dir)] = lib.MakeElement()
+		boxes[VecAdd(next, dir)] = struct{}{}
 		return true
 	}
 
@@ -193,7 +193,7 @@ func part1(input Input) {
 	fmt.Println("SOLUTION TO PART 1:", sol)
 }
 
-func checkPush(p, dir Vector, walls, boxes map[Vector]lib.Element, moved map[Vector]lib.Element) bool {
+func checkPush(p, dir Vector, walls, boxes map[Vector]struct{}, moved map[Vector]struct{}) bool {
 	next := VecAdd(p, dir)
 	if _, isWall := walls[next]; isWall {
 		return false
@@ -202,7 +202,7 @@ func checkPush(p, dir Vector, walls, boxes map[Vector]lib.Element, moved map[Vec
 	_, isNextMoved := moved[next]
 	_, isLeft := boxes[next]
 	if !isNextMoved && isLeft {
-		moved[next] = lib.MakeElement()
+		moved[next] = struct{}{}
 
 		right := VecAdd(next, Vec(0, +1))
 		if !checkPush(next, dir, walls, boxes, moved) || !checkPush(right, dir, walls, boxes, moved) {
@@ -214,7 +214,7 @@ func checkPush(p, dir Vector, walls, boxes map[Vector]lib.Element, moved map[Vec
 	_, isLeftMoved := moved[left]
 	_, isRight := boxes[left]
 	if !isLeftMoved && isRight {
-		moved[left] = lib.MakeElement()
+		moved[left] = struct{}{}
 		if !checkPush(left, dir, walls, boxes, moved) || !checkPush(next, dir, walls, boxes, moved) {
 			return false
 		}
@@ -227,19 +227,19 @@ func part2(input Input) {
 
 	mod := Vec(1, 2)
 
-	walls := make(map[Vector]lib.Element, len(input.walls))
+	walls := make(map[Vector]struct{}, len(input.walls))
 	for w := range input.walls {
 		left := VecMultElementwise(mod, w)
-		walls[left] = lib.MakeElement()
+		walls[left] = struct{}{}
 
 		right := VecAdd(left, Vec(0, 1))
-		walls[right] = lib.MakeElement()
+		walls[right] = struct{}{}
 	}
 
-	boxes := make(map[Vector]lib.Element, len(input.boxes))
+	boxes := make(map[Vector]struct{}, len(input.boxes))
 	for b := range input.boxes {
 		left := VecMultElementwise(mod, b)
-		boxes[left] = lib.MakeElement()
+		boxes[left] = struct{}{}
 	}
 
 	robot := VecMultElementwise(mod, input.robot)
@@ -253,7 +253,7 @@ func part2(input Input) {
 	for _, mv := range input.moves {
 
 		dir := direction(mv)
-		moved := make(map[Vector]lib.Element)
+		moved := make(map[Vector]struct{})
 		if checkPush(robot, dir, walls, boxes, moved) {
 			robot = VecAdd(robot, dir)
 
@@ -264,7 +264,7 @@ func part2(input Input) {
 			}
 
 			for box := range moved {
-				boxes[VecAdd(box, dir)] = lib.MakeElement()
+				boxes[VecAdd(box, dir)] = struct{}{}
 			}
 		}
 
