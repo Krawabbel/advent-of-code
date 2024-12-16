@@ -126,82 +126,112 @@ func PointMax(p1, p2 Point) Point {
 	}
 }
 
-func (b1 Box) Intersects(b2 Box) bool {
-	return Box{lb: PointMax(b1.lb, b2.ub), ub: PointMin(b1.ub, b2.ub)}.IsBox()
+func Intersect(b1, b2 Box) Box {
+	return Box{lb: PointMax(b1.lb, b2.ub), ub: PointMin(b1.ub, b2.ub)}
 }
 
 func (b Box) BisectX(cx int) (Box, Box, Box) {
-	b1 := Box{lb: b.lb, ub: Point{cx - 1, b.ub.y, b.ub.z}}
-	b2 := Box{lb: Point{cx, b.lb.y, b.lb.z}, ub: Point{cx, b.ub.y, b.ub.z}}
-	b3 := Box{lb: Point{cx + 1, b.lb.y, b.lb.z}, ub: b.ub}
-	return b1, b2, b3
 
+	b1 := Box{
+		lb: b.lb,
+		ub: Point{cx - 1, b.ub.y, b.ub.z},
+	}
+
+	b2 := Box{
+		lb: Point{cx, b.lb.y, b.lb.z},
+		ub: Point{cx, b.ub.y, b.ub.z},
+	}
+
+	b3 := Box{
+		lb: Point{cx + 1, b.lb.y, b.lb.z},
+		ub: b.ub,
+	}
+
+	return b1, b2, b3
 }
 
-// func (b Box) Bisect() (Box, Box) {
-// 	dx := b.ub.x - b.lb.x
-// 	dy := b.ub.y - b.lb.y
-// 	dz := b.ub.z - b.lb.z
-// 	if dx > dy && dx > dz {
-// 		cx := b.lb.x + dx/2
-// 		b1 := Box{lb: b.lb, ub: Point{cx, b.ub.y, b.ub.z}}
-// 		b2 := Box{lb: Point{cx - 1, b.lb.y, b.lb.z}, ub: b.ub}
-// 		return b1, b2
-// 	} else if dy > dx && dy > dz {
-// 		cy := b.lb.y + dy/2
-// 		b1 := Box{lb: b.lb, ub: Point{b.ub.x, cy, b.ub.z}}
-// 		b2 := Box{lb: Point{b.lb.x, cy - 1, b.lb.z}, ub: b.ub}
-// 		return b1, b2
-// 	} else {
-// 		cz := b.lb.z + dz/2
-// 		b1 := Box{lb: b.lb, ub: Point{b.ub.x, b.ub.y, cz}}
-// 		b2 := Box{lb: Point{b.lb.x, b.lb.z, cz - 1}, ub: b.ub}
-// 		return b1, b2
-// 	}
-// }
+func (b Box) BisectY(cy int) (Box, Box, Box) {
+
+	b1 := Box{
+		lb: b.lb,
+		ub: Point{b.ub.x, cy - 1, b.ub.z},
+	}
+
+	b2 := Box{
+		lb: Point{b.lb.x, cy, b.lb.z},
+		ub: Point{b.ub.x, cy, b.ub.z},
+	}
+
+	b3 := Box{
+		lb: Point{b.lb.x, cy + 1, b.lb.z},
+		ub: b.ub,
+	}
+
+	return b1, b2, b3
+}
+
+func (b Box) BisectZ(cz int) (Box, Box, Box) {
+
+	b1 := Box{
+		lb: b.lb,
+		ub: Point{b.ub.x, b.ub.y, cz - 1},
+	}
+
+	b2 := Box{
+		lb: Point{b.lb.x, b.lb.y, cz},
+		ub: Point{b.ub.x, b.ub.y, cz},
+	}
+
+	b3 := Box{
+		lb: Point{b.lb.x, b.lb.y, cz + 1},
+		ub: b.ub,
+	}
+
+	return b1, b2, b3
+}
 
 func turn_on(on lib.Set[Box], area Box) {
 
-	areas := lib.MakeSet(area)
+	isPartitioned := true
 
-	for !areas.IsEmpty() {
-		next := areas.Pop()
+	for _, box := range on.Slice() {
 
-		for _, box := range on.Slice() {
-			if box.Contains(next) {
-				break
-			}
-			if box.Intersects(area) {
-				next1, next2 := next.Bisect()
-				areas.Insert(next1)
-				areas.Insert(next2)
-				break
-			}
+		if box.Contains(next) {
+			isPartitioned = false
+			break
 		}
 
-		// no subset, no intersection -> add to partition
+		cut := Intersect(box, area)
+		if cut.IsBox() {
+			areas.Insert(next.Bisect()...)
+			isPartitioned = false
+		}
+
+	}
+
+	// no subset, no intersection -> add to partition
+	if isPartitioned {
 		on.Insert(area)
 	}
 
 }
 
 func turn_off(on lib.Set[Box], area Box) {
-	done := false
-	for !done {
-		done = true
-		for _, box := range on.Slice() {
-			if area.Contains(box) {
-				on.Delete(box)
-			}
-			if box.Intersects(area) {
-				b1, b2 := box.Bisect()
-				on.Delete(box)
-				on.Insert(b1)
-				on.Insert(b2)
-				done = false
-			}
+
+	for _, box := range on.Slice() {
+
+		if area.Contains(box) {
+			on.Delete(box)
 		}
+
+		cut := Intersect(box, area)
+		if cut.IsBox() {
+			on.Delete(box)
+			on.Insert(box.Bisect()...)
+		}
+
 	}
+
 }
 
 func part2(input Input) {

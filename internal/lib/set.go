@@ -33,12 +33,16 @@ func (s *Set[T]) IsEmpty() bool {
 	return s.Size() == 0
 }
 
-func (s *Set[T]) Insert(t T) {
-	s.elements[t] = struct{}{}
+func (s *Set[T]) Insert(ts ...T) {
+	for _, t := range ts {
+		s.elements[t] = struct{}{}
+	}
 }
 
-func (s *Set[T]) Delete(t T) {
-	delete(s.elements, t)
+func (s *Set[T]) Delete(ts ...T) {
+	for _, t := range ts {
+		delete(s.elements, t)
+	}
 }
 
 func (s *Set[T]) Slice() []T {
@@ -54,7 +58,7 @@ func (s *Set[T]) Contains(t T) bool {
 	return found
 }
 
-func (s *Set[T]) Clone(t T) Set[T] {
+func (s *Set[T]) Clone() Set[T] {
 	return Set[T]{elements: CloneMap(s.elements)}
 }
 

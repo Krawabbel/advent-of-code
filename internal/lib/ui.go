@@ -7,7 +7,7 @@ import (
 )
 
 func MustPressEnter() {
-	fmt.Println("Press 'Enter' to continue...")
+	fmt.Print("Press 'Enter' to continue...")
 	_, err := bufio.NewReader(os.Stdin).ReadBytes('\n')
 	Must(err)
 }
