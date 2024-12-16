@@ -1,6 +1,11 @@
 package lib
 
-import "golang.org/x/exp/constraints"
+import (
+	"fmt"
+	"strings"
+
+	"golang.org/x/exp/constraints"
+)
 
 type Number interface {
 	constraints.Float | constraints.Integer
@@ -14,16 +19,22 @@ func Vec[T Number](ts ...T) Vector[T] {
 	return Vector[T]{coords: ts}
 }
 
-func (v *Vector[T]) Slice() []T {
+func (v Vector[T]) Slice() []T {
 	return v.coords
 }
 
-func (v *Vector[T]) Size() int {
+func (v Vector[T]) Size() int {
 	return len(v.coords)
 }
 
-func (v *Vector[T]) Get(i int) T {
+func (v Vector[T]) Get(i int) T {
 	return v.coords[i]
+}
+
+func (v Vector[T]) String() string {
+	f := func(t T) string { return fmt.Sprint(t) }
+	strs := Transform(v.Slice(), f)
+	return "VEC [" + strings.Join(strs, ", ") + "]"
 }
 
 func VecAdd[T Number](u, v Vector[T]) Vector[T] {
@@ -33,4 +44,19 @@ func VecAdd[T Number](u, v Vector[T]) Vector[T] {
 		w[i] = u.coords[i] + v.coords[i]
 	}
 	return Vector[T]{coords: w}
+}
+
+func VecScalarMult[T Number](u T, v Vector[T]) Vector[T] {
+	f := func(t T) T { return u * t }
+	w := Transform(v.Slice(), f)
+	return Vector[T]{coords: w}
+}
+
+func VecInnerProd[T Number](u, v Vector[T]) T {
+	MustBeEqual(u.Size(), v.Size())
+	var w T = 0
+	for i := range u.Size() {
+		w += u.coords[i] * v.coords[i]
+	}
+	return w
 }
