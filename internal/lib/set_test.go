@@ -1,7 +1,7 @@
 package lib_test
 
 import (
-	"aoc2024/internal/lib"
+	"aoc/internal/lib"
 	"testing"
 )
 

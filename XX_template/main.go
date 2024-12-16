@@ -1,7 +1,7 @@
 package main
 
 import (
-	"aoc2024/internal/lib"
+	"aoc/internal/lib"
 	"bytes"
 	"fmt"
 	"os"
