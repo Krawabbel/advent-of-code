@@ -2,19 +2,18 @@ package main
 
 import (
 	"aoc/internal/lib"
-	"bytes"
 	"fmt"
 	"os"
 )
 
 type Input struct {
-	grid [][]byte
+	lines []string
 }
 
 func preprocess(data []byte) Input {
-	grid := bytes.Split(data, []byte{'\n'})
+	lines := lib.SplitLines(string(data))
 
-	return Input{grid: grid}
+	return Input{lines: lines}
 }
 
 func main() {
@@ -30,12 +29,13 @@ func main() {
 	part2(input)
 }
 
-func part1(input Input) {
+func part1(in Input) {
+	fmt.Printf("%+v\n", in)
 	sol := 0
 	fmt.Println("SOLUTION TO PART 1:", sol)
 }
 
-func part2(input Input) {
+func part2(in Input) {
 	sol := 0
 	fmt.Println("SOLUTION TO PART 2:", sol)
 }

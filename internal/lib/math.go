@@ -34,3 +34,26 @@ func Transform[T, U any](ts []T, f func(T) U) []U {
 	}
 	return us
 }
+
+func IntPow(base, exponent int) int {
+	if exponent < 0 {
+		panic("negative exponent")
+	}
+	return powImpl(base, exponent)
+}
+
+func powImpl(base, exponent int) int {
+
+	if exponent == 0 {
+		return 1
+	} else if exponent == 1 {
+		return base
+	}
+
+	if (exponent % 2) == 0 {
+		sqrt := powImpl(base, exponent/2)
+		return sqrt * sqrt
+	}
+
+	return base * powImpl(base, exponent-1)
+}
