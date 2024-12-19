@@ -13,7 +13,13 @@ func Must(err error) {
 
 func MustBeTrue(b bool) {
 	if !b {
-		panic("false is not true")
+		panic("expected true, got false")
+	}
+}
+
+func MustBeFalse(b bool) {
+	if b {
+		panic("expected false, got true")
 	}
 }
 
