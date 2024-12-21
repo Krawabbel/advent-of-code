@@ -75,7 +75,7 @@ var POS_NUMERIC = map[byte]Point{
 	PAD_A: {3, 2},
 }
 
-var vec = map[byte]Point{
+var dirs = map[byte]Point{
 	PAD_UP:    {-1, 0},
 	PAD_DOWN:  {+1, 0},
 	PAD_LEFT:  {0, -1},
@@ -90,135 +90,146 @@ var POS_DIRECTIONAL = map[byte]Point{
 	PAD_RIGHT: {1, 2},
 }
 
-type Controller interface {
-	push(byte) int
-}
-
-type Robot struct {
-	pos  Point
-	ctrl Controller
-	pad  map[byte]Point
-	id   int
-}
-
-func NewRobot(id int, ctrl Controller, pad map[byte]Point) *Robot {
-	return &Robot{
-		id:   id,
-		pos:  pad[PAD_A],
-		ctrl: ctrl,
-		pad:  pad,
-	}
-}
-
-func isValidPosition(pad map[byte]Point, pos Point) bool {
-	for _, ref := range pad {
-		if ref == pos {
-			return true
-		}
-	}
-	return false
-}
-
-func (r *Robot) move(dir byte) int {
-	next := PointAdd(r.pos, vec[dir])
-	if isValidPosition(r.pad, next) {
-		r.pos = next
-	}
-	return r.ctrl.push(dir)
-}
-
-var (
-	updown    = []byte{PAD_UP, PAD_DOWN}
-	leftright = []byte{PAD_LEFT, PAD_RIGHT}
-)
-
-func (r *Robot) moveTo(target Point) int {
-	dist := PointSub(target, r.pos)
-	moves := calcMoves(dist)
-
-	// fmt.Println("\nMOVES", r.pos, dist, target, moves)
-
-	dirorder := append(updown, leftright...)
-	if r.pos.j == 0 {
-		dirorder = append(leftright, updown...)
-	}
-
-	sum := 0
-	for _, mvdir := range dirorder {
-		mvcount := moves[mvdir]
-		for range mvcount {
-			sum += r.move(mvdir)
-		}
-	}
-	return sum
-}
-
-func (r *Robot) press() int {
-	return r.ctrl.push(PAD_A)
-}
-
-func (r *Robot) push(btn byte) int {
-	val := r.moveTo(r.pad[btn]) + r.press()
-	// fmt.Printf(" Robot %d pushes %s\n", r.id, string(btn))
-	// fmt.Print(string(btn))
-	return val
-}
-
-func calcMoves(d Point) map[byte]int {
+func calcMoves(dist Point) map[byte]int {
 	mv := make(map[byte]int)
 
-	if d.i < 0 {
-		mv[PAD_UP] -= d.i
-	} else if d.i == 0 {
+	if dist.i < 0 {
+		mv[PAD_UP] -= dist.i
+	} else if dist.i == 0 {
 		// do nothing
 	} else {
-		mv[PAD_DOWN] += d.i
+		mv[PAD_DOWN] += dist.i
 	}
 
-	if d.j > 0 {
-		mv[PAD_RIGHT] += d.j
-	} else if d.j == 0 {
+	if dist.j > 0 {
+		mv[PAD_RIGHT] += dist.j
+	} else if dist.j == 0 {
 		// do nothing
 	} else {
-		mv[PAD_LEFT] -= d.j
+		mv[PAD_LEFT] -= dist.j
 	}
 
 	return mv
 }
 
-type Operator struct{}
+var (
+	ErrInvalidPosition   = fmt.Errorf("invalid position")
+	ErrBadDirection      = fmt.Errorf("bad direction")
+	ErrExplorationFailed = fmt.Errorf("exploration failed")
+)
 
-func (o *Operator) push(btn byte) int {
-	fmt.Print(string(btn))
-	return 1
+// **********************************************************************
+
+func solve(begin, button byte, pads []map[byte]Point) (string, error) {
+	if len(pads) == 0 {
+		return string(button), nil
+	}
+
+	pad := pads[0]
+	p0, isValidPadPosition := pad[begin]
+	if !isValidPadPosition {
+		return "", ErrInvalidPosition
+	}
+
+	p1, found := pad[button]
+	lib.MustBeTrue(found)
+
+	dist := PointSub(p1, p0)
+	moves := calcMoves(dist)
+
+	return explore(PAD_A, moves, pads[1:])
+}
+
+func explore(begin byte, moves map[byte]int, pads []map[byte]Point) (string, error) {
+
+	if len(moves) == 0 {
+		return solve(begin, PAD_A, pads)
+	}
+
+	seq := ""
+	best := -1
+
+	for b := range dirs {
+
+		s, err := move(begin, b, moves, pads)
+		if err != nil {
+			// fmt.Println("DEBUG: ERR: ", err)
+			continue
+		}
+		// fmt.Println("DEBUG: NO ERR")
+
+		c := len(s)
+		isFirstValidSolution := best < 0
+		isBetterSolution := c < best
+		if isFirstValidSolution || isBetterSolution {
+			best = c
+			seq = s
+		}
+	}
+
+	if best < 0 {
+		return "", ErrExplorationFailed
+	}
+
+	return seq, nil
+}
+
+func move(begin, button byte, moves map[byte]int, pads []map[byte]Point) (string, error) {
+
+	steps, found := moves[button]
+	if !found || steps == 0 {
+		return "", ErrBadDirection
+	}
+
+	seq := ""
+
+	state := begin
+	for range steps {
+		s, err := solve(state, button, pads)
+		if err != nil {
+			return "", err
+		}
+		seq += s
+		state = button
+	}
+
+	delete(moves, button)
+	s, err := explore(state, moves, pads)
+	moves[button] = steps
+
+	return seq + s, err
+
 }
 
 func part1(in Input) {
 
 	sol := 0
 
+	pads := []map[byte]Point{
+		POS_NUMERIC,
+		POS_DIRECTIONAL,
+		POS_DIRECTIONAL,
+	}
+
 	for _, code := range in.codes {
 
 		fmt.Printf("%s: ", string(code))
 
-		var ctrl Controller = new(Operator)       // you
-		ctrl = NewRobot(2, ctrl, POS_DIRECTIONAL) // -40 degrees
-		ctrl = NewRobot(1, ctrl, POS_DIRECTIONAL) // high levels of radiation
-		ctrl = NewRobot(0, ctrl, POS_NUMERIC)     // depressurized
+		seq := ""
+		state := byte(PAD_A)
 
-		sum := 0
-		for _, btn := range code {
-			sum += ctrl.push(btn)
-			// fmt.Println(" =>", string(btn))
-			// fmt.Println(POS_NUMERIC[btn], r0.pos)
-			// fmt.Print(" ")
+		for _, button := range code {
+			s, err := solve(state, button, pads)
+			lib.Must(err)
+			seq += s
+			state = button
 		}
 
-		tmp := strings.ReplaceAll(string(code), "A", "")
-		fac := lib.MustToInt(tmp)
-		sol += sum * fac
+		numericPart := lib.MustToInt(strings.ReplaceAll(string(code), "A", ""))
+		cost := len(seq)
+		sol += cost * numericPart
 
-		fmt.Printf("\n %d * %d\n", sum, fac)
+		fmt.Printf("%s (%d * %d)\n", seq, cost, numericPart)
 		// lib.MustPressEnter()
 	}
 
