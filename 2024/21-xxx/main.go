@@ -201,6 +201,46 @@ func move(begin, button byte, moves map[byte]int, pads []map[byte]Point) (string
 
 }
 
+func apply(button byte, robots []Point, pads []map[byte]Point) string {
+
+	if len(robots) == 0 {
+		return string(button)
+	}
+
+	if button == PAD_A {
+		for b, p := range pads[0] {
+			if p == robots[0] {
+				return apply(b, robots[1:], pads[1:])
+			}
+		}
+		panic("got here")
+	}
+
+	robots[0] = PointAdd(robots[0], dirs[button])
+
+	if !isValidPosition(pads[0], robots[0]) {
+		panic("invalid position")
+	}
+
+	return ""
+}
+
+func isValidPosition(pad map[byte]Point, pos Point) bool {
+	for _, p := range pad {
+		if p == pos {
+			return true
+		}
+	}
+	return false
+}
+
+func sim(seq string, robots []Point, pads []map[byte]Point) string {
+	if seq == "" {
+		return ""
+	}
+	return apply(seq[0], robots, pads) + sim(seq[1:], robots, pads)
+}
+
 func part1(in Input) {
 
 	sol := 0
@@ -230,6 +270,14 @@ func part1(in Input) {
 		sol += cost * numericPart
 
 		fmt.Printf("%s (%d * %d)\n", seq, cost, numericPart)
+
+		simPads := []map[byte]Point{POS_DIRECTIONAL, POS_DIRECTIONAL, POS_NUMERIC}
+		simRobots := make([]Point, len(simPads))
+		for i, pad := range simPads {
+			simRobots[i] = pad[PAD_A]
+		}
+		have := sim(seq, simRobots, simPads)
+		lib.MustBeEqual(string(code), have)
 		// lib.MustPressEnter()
 	}
 
