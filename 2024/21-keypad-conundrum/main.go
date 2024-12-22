@@ -201,6 +201,22 @@ func move(begin, button byte, moves map[byte]int, pads []map[byte]Point) (string
 
 }
 
+func isValidPosition(pad map[byte]Point, pos Point) bool {
+	for _, p := range pad {
+		if p == pos {
+			return true
+		}
+	}
+	return false
+}
+
+func sim(seq string, robots []Point, pads []map[byte]Point) string {
+	if seq == "" {
+		return ""
+	}
+	return apply(seq[0], robots, pads) + sim(seq[1:], robots, pads)
+}
+
 func apply(button byte, robots []Point, pads []map[byte]Point) string {
 
 	if len(robots) == 0 {
@@ -225,45 +241,126 @@ func apply(button byte, robots []Point, pads []map[byte]Point) string {
 	return ""
 }
 
-func isValidPosition(pad map[byte]Point, pos Point) bool {
-	for _, p := range pad {
-		if p == pos {
-			return true
-		}
-	}
-	return false
+// *** BRUTE-FORCE ***
+
+type State struct {
+	r0, r1, r2 Point
+	want       string
 }
 
-func sim(seq string, robots []Point, pads []map[byte]Point) string {
-	if seq == "" {
-		return ""
+func (s *State) robots() []*Point {
+	return []*Point{&s.r0, &s.r1, &s.r2}
+}
+
+type Value struct {
+	sequ  string
+	valid bool
+}
+
+var memo = make(map[State]Value)
+
+func exploreBF(state State) Value {
+	if _, exists := memo[state]; !exists {
+		memo[state] = exploreBFImpl(state)
 	}
-	return apply(seq[0], robots, pads) + sim(seq[1:], robots, pads)
+	return memo[state]
+}
+
+var buttonsBruteForce = []byte{PAD_UP, PAD_DOWN, PAD_LEFT, PAD_RIGHT, PAD_A}
+
+func exploreBFImpl(state State) Value {
+
+	if state.want == "" {
+		return Value{"", true}
+	}
+
+	best := Value{"", false}
+
+	for _, button := range buttonsBruteForce {
+
+		val := applyBF(button, state)
+		if !val.valid {
+			continue
+		}
+
+		if !best.valid || len(val.sequ) < len(best.sequ) {
+			best = val
+		}
+	}
+
+	return best
+}
+
+var padsBruteForce = []map[byte]Point{POS_DIRECTIONAL, POS_DIRECTIONAL, POS_NUMERIC}
+
+func applyBF(button byte, state State) Value {
+
+	rs := state.robots()
+	out, valid := applyBFImpl(button, rs, padsBruteForce)
+	if !valid {
+		return Value{"", false}
+	}
+	lib.MustBeTrue(len(out) < 2)
+
+	want := state.want
+	if len(out) == 1 {
+		lib.MustBeTrue(len(want) > 0)
+		if want[0] == out[0] {
+			want = want[1:]
+		}
+	}
+
+	s := State{
+		r0:   *rs[0],
+		r1:   *rs[1],
+		r2:   *rs[2],
+		want: want,
+	}
+
+	v := exploreBF(s)
+	v.sequ = v.sequ + string(button)
+
+	return v
+}
+
+func applyBFImpl(button byte, robots []*Point, pads []map[byte]Point) (string, bool) {
+
+	if len(robots) == 0 {
+		return "", true
+	}
+
+	if button == PAD_A {
+		for b, p := range pads[0] {
+			if p == *(robots[0]) {
+				return applyBFImpl(b, robots[1:], pads[1:])
+			}
+		}
+	}
+
+	*(robots[0]) = PointAdd(*(robots[0]), dirs[button])
+
+	return "", isValidPosition(pads[0], *(robots[0]))
+
 }
 
 func part1(in Input) {
 
 	sol := 0
 
-	pads := []map[byte]Point{
-		POS_NUMERIC,
-		POS_DIRECTIONAL,
-		POS_DIRECTIONAL,
-	}
-
 	for _, code := range in.codes {
 
 		fmt.Printf("%s: ", string(code))
-
-		seq := ""
-		state := byte(PAD_A)
-
-		for _, button := range code {
-			s, err := solve(state, button, pads)
-			lib.Must(err)
-			seq += s
-			state = button
+		state := State{
+			r0:   padsBruteForce[0][PAD_A],
+			r1:   padsBruteForce[1][PAD_A],
+			r2:   padsBruteForce[2][PAD_A],
+			want: string(code),
 		}
+
+		val := exploreBF(state)
+		lib.MustBeTrue(val.valid)
+
+		seq := val.sequ
 
 		numericPart := lib.MustToInt(strings.ReplaceAll(string(code), "A", ""))
 		cost := len(seq)
@@ -271,12 +368,11 @@ func part1(in Input) {
 
 		fmt.Printf("%s (%d * %d)\n", seq, cost, numericPart)
 
-		simPads := []map[byte]Point{POS_DIRECTIONAL, POS_DIRECTIONAL, POS_NUMERIC}
-		simRobots := make([]Point, len(simPads))
-		for i, pad := range simPads {
+		simRobots := make([]Point, len(padsBruteForce))
+		for i, pad := range padsBruteForce {
 			simRobots[i] = pad[PAD_A]
 		}
-		have := sim(seq, simRobots, simPads)
+		have := sim(seq, simRobots, padsBruteForce)
 		lib.MustBeEqual(string(code), have)
 		// lib.MustPressEnter()
 	}
