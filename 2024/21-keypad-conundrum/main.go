@@ -95,6 +95,7 @@ func init() {
 	for key, val := range POS_DIRECTIONAL {
 		BUTTONS_DIRECTIONAL[val] = key
 	}
+
 }
 
 var dirs = map[byte]Point{
@@ -222,36 +223,63 @@ func makeMap(positions map[byte]Point, buttons map[Point]byte) map[Edge][][]byte
 	return dict
 }
 
-func buildSeq(code []byte, maps []map[Edge][][]byte) string {
+type Args struct {
+	last, next byte
+	level      int
+}
+
+var cache = map[Args]string{}
+
+func buildEdge(last, next byte, maps []map[Edge][][]byte) string {
+	args := Args{last, next, len(maps)}
+	if _, found := cache[args]; !found {
+		cache[args] = buildEdgeImpl(last, next, maps)
+	}
+	return cache[args]
+}
+
+func buildEdgeImpl(last, next byte, maps []map[Edge][][]byte) string {
+
+	best := "INITIAL"
+
+	paths := maps[0][Edge{last, next}]
+	for _, p := range paths {
+		s := buildRemainder(PAD_A, append(p, PAD_A), maps[1:])
+		if len(s) < len(best) || best == "INITIAL" {
+			best = s
+		}
+	}
+
+	if best == "INITIAL" {
+		best = ""
+	}
+
+	return best
+}
+
+func buildRemainder(last byte, code []byte, maps []map[Edge][][]byte) string {
 
 	if len(maps) == 0 {
 		return string(code)
 	}
 
-	seq := ""
-
-	last := byte(PAD_A)
-	for _, next := range code {
-		best := "INITIAL"
-		paths := maps[0][Edge{last, next}]
-		for _, p := range paths {
-			s := buildSeq(append(p, PAD_A), maps[1:])
-			if len(s) < len(best) || best == "INITIAL" {
-				best = s
-			}
-		}
-
-		if best != "INITIAL" {
-			seq += best
-		}
-
-		last = next
+	if len(code) == 0 {
+		return ""
 	}
+	next := code[0]
 
-	return seq
+	return buildEdge(last, next, maps) + buildRemainder(next, code[1:], maps)
 }
 
 func part1(in Input) {
+	fmt.Println("SOLUTION TO PART 1:", solve(in.codes, 2))
+}
+
+func part2(in Input) {
+	fmt.Println("SOLUTION TO PART 2:", solve(in.codes, 26))
+}
+
+func solve(codes [][]byte, n int) int {
 
 	mapDirpad := makeMap(POS_DIRECTIONAL, BUTTONS_DIRECTIONAL)
 
@@ -265,9 +293,14 @@ func part1(in Input) {
 
 	// lib.MustPressEnter()
 
+	maps := []map[Edge][][]byte{mapNumpad}
+	for range n {
+		maps = append(maps, mapDirpad)
+	}
+
 	sol := 0
-	for _, code := range in.codes {
-		seq := buildSeq(code, []map[Edge][][]byte{mapNumpad, mapDirpad, mapDirpad})
+	for _, code := range codes {
+		seq := buildRemainder(PAD_A, code, maps)
 		fmt.Printf("CODE %s: %s\n", string(code), seq)
 
 		numericPart := lib.MustToInt(strings.ReplaceAll(string(code), "A", ""))
@@ -284,12 +317,7 @@ func part1(in Input) {
 		// lib.MustPressEnter()
 	}
 
-	fmt.Println("SOLUTION TO PART 1:", sol)
-}
-
-func part2(in Input) {
-	sol := 0
-	fmt.Println("SOLUTION TO PART 2:", sol)
+	return sol
 }
 
 // var padsBruteForce = []map[byte]Point{POS_DIRECTIONAL, POS_DIRECTIONAL, POS_NUMERICAL}
