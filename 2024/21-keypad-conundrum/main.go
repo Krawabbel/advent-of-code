@@ -228,9 +228,9 @@ type Args struct {
 	level      int
 }
 
-var cache = map[Args]string{}
+var cache = map[Args]int{}
 
-func buildEdge(last, next byte, maps []map[Edge][][]byte) string {
+func buildEdge(last, next byte, maps []map[Edge][][]byte) int {
 	args := Args{last, next, len(maps)}
 	if _, found := cache[args]; !found {
 		cache[args] = buildEdgeImpl(last, next, maps)
@@ -238,33 +238,31 @@ func buildEdge(last, next byte, maps []map[Edge][][]byte) string {
 	return cache[args]
 }
 
-func buildEdgeImpl(last, next byte, maps []map[Edge][][]byte) string {
+func buildEdgeImpl(last, next byte, maps []map[Edge][][]byte) int {
 
-	best := "INITIAL"
+	best := -1
 
 	paths := maps[0][Edge{last, next}]
 	for _, p := range paths {
 		s := buildRemainder(PAD_A, append(p, PAD_A), maps[1:])
-		if len(s) < len(best) || best == "INITIAL" {
+		if s < best || best == -1 {
 			best = s
 		}
 	}
 
-	if best == "INITIAL" {
-		best = ""
-	}
+	lib.MustBeTrue(best >= 0)
 
 	return best
 }
 
-func buildRemainder(last byte, code []byte, maps []map[Edge][][]byte) string {
+func buildRemainder(last byte, code []byte, maps []map[Edge][][]byte) int {
 
 	if len(maps) == 0 {
-		return string(code)
+		return len(code)
 	}
 
 	if len(code) == 0 {
-		return ""
+		return 0
 	}
 	next := code[0]
 
@@ -276,7 +274,7 @@ func part1(in Input) {
 }
 
 func part2(in Input) {
-	fmt.Println("SOLUTION TO PART 2:", solve(in.codes, 26))
+	fmt.Println("SOLUTION TO PART 2:", solve(in.codes, 25))
 }
 
 func solve(codes [][]byte, n int) int {
@@ -300,64 +298,12 @@ func solve(codes [][]byte, n int) int {
 
 	sol := 0
 	for _, code := range codes {
-		seq := buildRemainder(PAD_A, code, maps)
-		fmt.Printf("CODE %s: %s\n", string(code), seq)
+		cost := buildRemainder(PAD_A, code, maps)
+		fmt.Printf("CODE %s: %d\n", string(code), cost)
 
 		numericPart := lib.MustToInt(strings.ReplaceAll(string(code), "A", ""))
-		cost := len(seq)
 		sol += cost * numericPart
-
-		// // *** SIMULATION / VALIDATION ***
-		// simRobots := make([]Point, len(padsBruteForce))
-		// for i, pad := range padsBruteForce {
-		// 	simRobots[i] = pad[PAD_A]
-		// }
-		// have := sim(seq, simRobots, padsBruteForce)
-		// lib.MustBeEqual(string(code), have)
-		// lib.MustPressEnter()
 	}
 
 	return sol
 }
-
-// var padsBruteForce = []map[byte]Point{POS_DIRECTIONAL, POS_DIRECTIONAL, POS_NUMERICAL}
-
-// func isValidPosition(pad map[byte]Point, pos Point) bool {
-// 	for _, p := range pad {
-// 		if p == pos {
-// 			return true
-// 		}
-// 	}
-// 	return false
-// }
-
-// func sim(seq string, robots []Point, pads []map[byte]Point) string {
-// 	if seq == "" {
-// 		return ""
-// 	}
-// 	return apply(seq[0], robots, pads) + sim(seq[1:], robots, pads)
-// }
-
-// func apply(button byte, robots []Point, pads []map[byte]Point) string {
-
-// 	if len(robots) == 0 {
-// 		return string(button)
-// 	}
-
-// 	if button == PAD_A {
-// 		for b, p := range pads[0] {
-// 			if p == robots[0] {
-// 				return apply(b, robots[1:], pads[1:])
-// 			}
-// 		}
-// 		panic("got here")
-// 	}
-
-// 	robots[0] = PointAdd(robots[0], dirs[button])
-
-// 	if !isValidPosition(pads[0], robots[0]) {
-// 		panic("invalid position")
-// 	}
-
-// 	return ""
-// }
