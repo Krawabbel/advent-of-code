@@ -125,25 +125,7 @@ func hash(strs []string) string {
 	return strings.Join(tmp, ",")
 }
 
-type Args struct {
-	r, p, x string
-}
-
-var cache = lib.MakeSet[Args]()
-
-func BronKerbosch(r, p, x lib.Set[string], dict map[string]*Node, report func([]string)) {
-
-	args := Args{hash(r.Slice()), hash(p.Slice()), hash(x.Slice())}
-
-	// fmt.Println(args)
-
-	if !cache.Contains(args) {
-		BronKerboschImpl(r, p, x, dict, report)
-		cache.Insert(args)
-	}
-}
-
-func BronKerboschImpl(r, p, x lib.Set[string], dict map[string]*Node, report func([]string)) {
+func bronKerbosch(r, p, x lib.Set[string], dict map[string]*Node, report func([]string)) {
 	if p.IsEmpty() && x.IsEmpty() {
 		report(r.Slice())
 		return
@@ -158,7 +140,7 @@ func BronKerboschImpl(r, p, x lib.Set[string], dict map[string]*Node, report fun
 		nextP := lib.SetIntersect(p, n)
 		nextX := lib.SetIntersect(x, n)
 
-		BronKerbosch(nextR, nextP, nextX, dict, report)
+		bronKerbosch(nextR, nextP, nextX, dict, report)
 
 		p.Delete(v)
 		x.Insert(v)
@@ -187,7 +169,7 @@ func part2(in Input) {
 		}
 	}
 
-	BronKerbosch(lib.MakeSet[string](), vertices, lib.MakeSet[string](), dict, report)
+	bronKerbosch(lib.MakeSet[string](), vertices, lib.MakeSet[string](), dict, report)
 
 	fmt.Printf("SOLUTION TO PART 2: %s\n", sol)
 
