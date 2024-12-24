@@ -32,9 +32,13 @@ func (v Vector[T]) Get(i int) T {
 }
 
 func (v Vector[T]) String() string {
-	f := func(t T) string { return fmt.Sprint(t) }
+	return "VEC [" + v.Hash("%v", ", ") + "]"
+}
+
+func (v Vector[T]) Hash(format, sep string) string {
+	f := func(t T) string { return fmt.Sprintf(format, t) }
 	strs := Transform(v.Slice(), f)
-	return "VEC [" + strings.Join(strs, ", ") + "]"
+	return strings.Join(strs, sep)
 }
 
 func VecAdd[T Number](u, v Vector[T]) Vector[T] {
@@ -42,6 +46,15 @@ func VecAdd[T Number](u, v Vector[T]) Vector[T] {
 	w := make([]T, u.Size())
 	for i := range w {
 		w[i] = u.coords[i] + v.coords[i]
+	}
+	return Vector[T]{coords: w}
+}
+
+func VecSub[T Number](u, v Vector[T]) Vector[T] {
+	MustBeEqual(u.Size(), v.Size())
+	w := make([]T, u.Size())
+	for i := range w {
+		w[i] = u.coords[i] - v.coords[i]
 	}
 	return Vector[T]{coords: w}
 }

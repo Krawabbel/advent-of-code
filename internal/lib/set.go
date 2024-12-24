@@ -76,6 +76,14 @@ func (s1 *Set[T]) Intersect(s2 Set[T]) {
 	}
 }
 
+func (s1 *Set[T]) Diff(s2 Set[T]) {
+	for _, val := range s1.Slice() {
+		if s2.Contains(val) {
+			s1.Delete(val)
+		}
+	}
+}
+
 func (s *Set[T]) Modify(f func(t T) T) {
 	for _, val := range s.Slice() {
 		s.Delete(val)
@@ -84,9 +92,18 @@ func (s *Set[T]) Modify(f func(t T) T) {
 }
 
 func (s *Set[T]) Pop() T {
-	t := s.Slice()[0]
-	s.Delete(t)
-	return t
+	for val := range s.Elements {
+		s.Delete(val)
+		return val
+	}
+	panic("attempt to pop empty set")
+}
+
+func (s *Set[T]) Peek() T {
+	for val := range s.Elements {
+		return val
+	}
+	panic("attempt to peek empty set")
 }
 
 func (s Set[T]) String() string {
@@ -94,5 +111,42 @@ func (s Set[T]) String() string {
 	for i, val := range s.Slice() {
 		strs[i] = fmt.Sprint(val)
 	}
-	return "{" + strings.Join(strs, ", ") + "}"
+	return "{" + strings.Join(strs, ",") + "}"
+}
+
+func SetJoin[T comparable](s1, s2 Set[T]) Set[T] {
+	s := MakeSet[T]()
+	for v := range s1.Elements {
+		s.Insert(v)
+	}
+	for v := range s2.Elements {
+		s.Insert(v)
+	}
+	return s
+}
+
+func SetIntersect[T comparable](s1, s2 Set[T]) Set[T] {
+	s := MakeSet[T]()
+	for v := range s1.Elements {
+		if s2.Contains(v) {
+			s.Insert(v)
+		}
+	}
+	return s
+}
+
+func SetDiff[T comparable](s1, s2 Set[T]) Set[T] {
+	s := MakeSet[T]()
+	for v := range s1.Elements {
+		if !s2.Contains(v) {
+			s.Insert(v)
+		}
+	}
+	return s
+}
+
+func SetInsert[T comparable](s Set[T], t T) Set[T] {
+	set := s.Clone()
+	set.Insert(t)
+	return set
 }
