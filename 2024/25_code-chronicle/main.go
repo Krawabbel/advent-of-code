@@ -97,6 +97,5 @@ func part1(in Input) {
 }
 
 func part2(in Input) {
-	sol := 0
-	fmt.Println("SOLUTION TO PART 2:", sol)
+	fmt.Println("SOLUTION TO PART 2:", "nothing to do :)")
 }
