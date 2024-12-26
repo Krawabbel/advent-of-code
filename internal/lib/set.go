@@ -150,3 +150,23 @@ func SetInsert[T comparable](s Set[T], t T) Set[T] {
 	set.Insert(t)
 	return set
 }
+
+func SetEqual[T comparable](s, t Set[T]) bool {
+	if s.Size() != t.Size() {
+		return false
+	}
+
+	for v := range s.Elements {
+		if !t.Contains(v) {
+			return false
+		}
+	}
+
+	for v := range t.Elements {
+		if !t.Contains(v) {
+			return false
+		}
+	}
+
+	return true
+}
