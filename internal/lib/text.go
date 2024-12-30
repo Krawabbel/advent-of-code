@@ -6,7 +6,7 @@ import (
 )
 
 func SplitLines(txt string) []string {
-	return strings.Split(txt, "\n")
+	return strings.Split(strings.ReplaceAll(txt, "\r\n", "\n"), "\n")
 }
 
 func PrintFull[T any](t T) {
