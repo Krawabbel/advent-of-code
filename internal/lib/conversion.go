@@ -1,6 +1,9 @@
 package lib
 
-import "strconv"
+import (
+	"strconv"
+	"strings"
+)
 
 func MustToInt(s string) int {
 	i, err := strconv.Atoi(s)
@@ -14,4 +17,8 @@ func MustToInts(strs []string) []int {
 		ints[i] = MustToInt(s)
 	}
 	return ints
+}
+
+func SplitToInts(s string, delim string) []int {
+	return MustToInts(strings.Split(s, delim))
 }

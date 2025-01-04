@@ -10,7 +10,7 @@ func Panicf(format string, a ...any) {
 }
 
 func PrintSlice[T any](ts []T) {
-	for _, t := range ts {
-		fmt.Printf("%+v\n", t)
+	for i, t := range ts {
+		fmt.Printf("%3d: %+v\n", i, t)
 	}
 }
