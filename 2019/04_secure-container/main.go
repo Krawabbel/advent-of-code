@@ -27,38 +27,74 @@ func main() {
 
 	input := preprocess(blob)
 
-	part1(input)
-
-	part2(input)
+	solve(input)
 }
 
 func to6Digits(n int) []int {
 	out := make([]int, 6)
-
+	for i := range 6 {
+		out[i] = n % 10
+		n /= 10
+	}
+	return out
 }
 
-func explore(a, b []int, l int, same bool) int {
-	n := len(a)
-
-	if n == 0 {
-		if same {
-			return 0
+func explore(as, bs []int, d, l int, hasDoubles bool, bot, top bool, s string, lastReps, maxReps int, hasPair bool) (int, int) {
+	//fmt.Println(as, bs, d, l, double, bot, top, s)
+	if d < 0 {
+		if hasDoubles {
+			//fmt.Println(as, bs, d, l, hasDoubles, bot, top, s, lastReps, maxReps, hasPair)
+			if hasPair || lastReps == 2 {
+				//fmt.Println(s, "x x")
+				//lib.MustPressEnter()
+				return 1, 1
+			}
+			//fmt.Println(s, "x o")
+			//lib.MustPressEnter()
+			return 1, 0
+		} else {
+			return 0, 0
 		}
-		return 1
 	}
 
-	for j := l + 1; j < 10; j++ {
-		sum += explore(a, b, n-1, j, same)
+	// d > 0
+
+	a := as[d]
+	b := bs[d]
+
+	lb := 0
+	ub := 9
+	if l != -1 {
+		lb = max(lb, l)
 	}
-	return sum
+	if bot {
+		lb = max(lb, a)
+	}
+	if top {
+		ub = min(ub, b)
+	}
+	//fmt.Println(lb, ub)
+
+	sum1, sum2 := 0, 0
+	for c := lb; c <= ub; c++ {
+		lReps := 1
+		hPair := hasPair
+		if c == l {
+			lReps = lastReps + 1
+		} else if lastReps == 2 {
+			hPair = true
+		}
+		mReps := max(maxReps, lReps)
+		add1, add2 := explore(as, bs, d-1, c, hasDoubles || c == l, bot && c == a, top && c == b, fmt.Sprintf("%s%d", s, c), lReps, mReps, hPair)
+		sum1 += add1
+		sum2 += add2
+	}
+
+	return sum1, sum2
 }
 
-func part1(in Input) {
-	sol := explore(in.a, in.b, 6, 0, false)
-	fmt.Println("SOLUTION TO PART 1:", sol)
-}
-
-func part2(in Input) {
-	sol := 0
-	fmt.Println("SOLUTION TO PART 2:", sol)
+func solve(in Input) {
+	sol1, sol2 := explore(to6Digits(in.a), to6Digits(in.b), 5, -1, false, true, true, "", 0, 0, false)
+	fmt.Println("SOLUTION TO PART 1:", sol1)
+	fmt.Println("SOLUTION TO PART 2:", sol2)
 }
