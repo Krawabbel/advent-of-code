@@ -19,7 +19,7 @@ type Mapping struct {
 
 func preprocess(data []byte) Input {
 	parts := strings.Split(strings.Trim(string(data), "\n"), "\n\n")
-	seeds := lib.SplitToInts(strings.TrimPrefix(parts[0], "seeds: "), " ")
+	seeds := lib.MustSplitToInts(strings.TrimPrefix(parts[0], "seeds: "), " ")
 
 	almanac := make(map[string]Mapping)
 
@@ -32,7 +32,7 @@ func preprocess(data []byte) Input {
 		entries := make([][]int, 0)
 		for j := 1; j < len(lines); j++ {
 			l := lines[j]
-			e := lib.SplitToInts(l, " ")
+			e := lib.MustSplitToInts(l, " ")
 			entries = append(entries, e)
 		}
 		almanac[src] = Mapping{nextKey: dst, entries: entries}
